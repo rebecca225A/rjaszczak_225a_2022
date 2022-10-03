@@ -1,0 +1,62 @@
+---
+title: '225A Workshop 2: RStudio and Tidyverse'
+author: "Rebecca Jaszczak"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r Libraries}
+library(tidyverse)
+```
+
+A tab-delimited file has two columns: the date, and the highest temperature on that day. Produce a graph showing the average highest temperature for each month.
+
+Let's work on this problem from the initial course survey!
+
+```{r Read in data}
+sf_weather <- read.csv("../raw_data/sf_weather.csv")
+head(sf_weather)
+colnames(sf_weather)
+```
+```{r Subset the data and split out date}
+sf_weather_temps <- sf_weather %>%
+  select(c(DATE,TMAX,TMIN)) %>%
+  separate(DATE, c("YEAR", "MONTH", "DAY"), sep = "-", remove = F) %>%
+  filter(YEAR == "2021") %>% #double == to filter
+  mutate(TAVG = ((TMAX+TMIN)/2)) %>% #single = to assign a new column
+  group_by(MONTH) %>% 
+  summarise(MAX_MO_TEMP = max(TAVG))
+  
+sf_weather_temps
+```
+
+```{r Plotting out data}
+plot(sf_weather_temps)
+```
+
+```{r Make a function to subset data}
+yearly_subsetter <- function(year) {
+  year_subset <- sf_weather %>%
+  select(c(DATE,TMAX,TMIN)) %>%
+  separate(DATE, c("YEAR", "MONTH", "DAY"), sep = "-", remove = F) %>%
+  filter(YEAR == year) %>% #double == to filter
+  mutate(TAVG = ((TMAX+TMIN)/2)) %>% #single = to assign a new column
+  group_by(MONTH) %>% 
+  summarise(MAX_MO_TEMP = max(TAVG))
+  year_subset
+}
+```
+
+```{r apply function to data}
+year <- "1950"
+
+plot(yearly_subsetter(year), main = year)
+```
+
+```{r Inspect several years at once with a loop, fig.width=3, fig.height=2}
+for ( year in c("1930", "1940", "1950", "1960") ) {
+  plot(yearly_subsetter(year), main = year)
+}
+```
+

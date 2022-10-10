@@ -1,0 +1,70 @@
+---
+title: "Workshop 2 Code - Tidyverse"
+author: "Rebecca Jaszczak"
+output: html_notebook
+---
+
+Making a new chunk: Alt+Ctl+i or press button 
+```{r libraries}
+library(tidyverse)
+```
+```{r read in weather data}
+sf_weather <- read.csv('../raw_data/sf_weather.csv')
+head(sf_weather)
+
+unique(sf_weather$SNOW)
+
+unique(sf_weather$DATE[sf_weather$SNOW == '0.8'])
+```
+
+```{r selecting one year of data}
+sf_weather_2021 <- sf_weather %>%
+  select( c(DATE, TMAX, TMIN) ) %>%
+  separate(DATE, c("YEAR", "MONTH", "DAY"), sep = '-', remove = FALSE) %>%
+  filter(YEAR == '2021')
+```
+
+```{r alt selection code}
+select(sf_weather, DATE)
+```
+```{r descriptive text}
+5+5
+```
+
+```{r adding average data}
+max_temp_month_2021 <- sf_weather_2021 %>%
+  mutate('TAVG' = (TMAX+TMIN)/2 ) %>%
+  group_by(MONTH) %>%
+  summarise('MAX_MONTH_TEMP'=max(TAVG))
+
+# rm(max_temp_month) #removed bad label
+```
+
+```{r plotting the 2021 data}
+plot(max_temp_month_2021)
+```
+
+```{r weather function}
+yearly_subsetter <- function(year) {
+  sf_weather %>%
+  select( c(DATE, TMAX, TMIN) ) %>%
+  separate(DATE, c("YEAR", "MONTH", "DAY"), sep = '-', remove = FALSE) %>%
+  filter(YEAR == year) %>%
+  mutate('TAVG' = (TMAX+TMIN)/2 ) %>%
+  group_by(MONTH) %>%
+  summarise('MAX_MONTH_TEMP'=max(TAVG))
+}
+```
+
+```{r 1950 data}
+plot(yearly_subsetter('1950'))
+```
+
+```{r for loop for many years}
+
+for ( single_year in c('1930', '1931', '1937') ) {
+  plot(yearly_subsetter(single_year), main = single_year)
+}
+
+```
+

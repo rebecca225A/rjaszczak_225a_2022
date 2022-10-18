@@ -34,7 +34,7 @@ library(Seurat)
 # 1. Import CellRanger output and add some basic metadata.
 
 ```{r}
-Tcells <- CreateSeuratObject(Read10X("Tcells/cellranger_Raw/"))
+Tcells <- CreateSeuratObject(Read10X("~/../Downloads/Tcells/cellranger_Raw/"))
 
 #Count and add percent.mito meta
 Tcells[["percent.mito"]] <- PercentageFeatureSet(Tcells, pattern = "^MT-")
@@ -296,27 +296,27 @@ dittoDimPlot(Tcells, "Tage", size = 1, reduction.use = "umap",
 
 plots <- list(
     dittoDimPlot(Tcells,
-        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="4-adult",
+        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage %in% "CD4_adult",
         colors = 1, legend.show = FALSE, ylab = NULL, xlab = NULL, main = NULL,
         show.axes.numbers = FALSE),
     dittoDimPlot(Tcells,
-        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="4-cord",
+        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="CD4_cord",
         colors = 2, legend.show = FALSE, ylab = NULL, xlab = NULL, main = NULL,
         show.axes.numbers = FALSE),
     dittoDimPlot(Tcells,
-        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="4-fetal",
+        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="CD4_fetal",
         colors = 3, legend.show = FALSE, ylab = NULL, xlab = NULL, main = NULL,
         show.axes.numbers = FALSE),
     dittoDimPlot(Tcells,
-        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="8-adult",
+        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="CD8_adult",
         colors = 9, legend.show = FALSE, ylab = NULL, xlab = NULL, main = NULL,
         show.axes.numbers = FALSE),
     dittoDimPlot(Tcells,
-        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="8-cord",
+        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="CD8_cord",
         colors = 10, legend.show = FALSE, ylab = NULL, xlab = NULL, main = NULL,
         show.axes.numbers = FALSE),
     dittoDimPlot(Tcells,
-        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="8-fetal",
+        "Tage", size = 0.5, reduction.use = "umap", cells.use = Tcells$Tage=="CD8_fetal",
         colors = 11, legend.show = FALSE, ylab = NULL, xlab = NULL, main = NULL,
         show.axes.numbers = FALSE),
     dittoDimPlot(Tcells,
@@ -328,7 +328,7 @@ plots <- list(
         rename.var.groups = c("Adult-CD4", "UCB-CD4", "Fetal-CD4", 
                               "Adult-CD8", "UCB-CD8", "Fetal-CD8")))
 )
-pdf("Tcells-Figs/Tcell_umap_surround.pdf", w=6, h=6)
+pdf("Tcell_umap_surround.pdf", w=6, h=6)
 gridExtra::grid.arrange(grobs = plots,
     layout_matrix = matrix(c(
         7,7,7,4,
@@ -336,15 +336,21 @@ gridExtra::grid.arrange(grobs = plots,
         7,7,7,6,
         1,2,3,8), ncol = 4))
 dev.off()
+getwd()
 ```
 
 #10 Quantify Clustering
 
 ```{r}
-age.clust <- factor(Tcells$RNA_snn_res.0.1, labels = c("adult-cluster", "fetal-cluster", "UCB-cluster"))
+unique(Tcells@meta.data$RNA_snn_res.0.2)
+age.clust <- factor(Tcells@meta.data$RNA_snn_res.0.2, labels = c("adult-cluster", "fetal-cluster", "UCB-cluster"))
 Tcells@meta.data$age.cluster <- as.character(age.clust)
 Idents(Tcells) <- "age.cluster"
 
+UMAPPlot(Tcells)
+```
+
+```{r}
 pdf("Tcells-Figs/Clustering-umap_small.pdf", width = 3, height = 1.5)
 dittoDimPlot(Tcells, "ident", size=0.3, do.label = FALSE, main = NULL, colors = c(1,3,2),
     xlab = NULL, ylab = NULL, show.axes.numbers = FALSE, reduction.use = "umap",
@@ -375,14 +381,19 @@ dittoBarPlot(Tcells, "ident", group.by = "Sample",
           xlab = NULL)
 dev.off()
 
+```
+
+
+```{r}
+
 # Percentage of fetal cells in fetal-cluster
-sum(meta("ident",Tcells)=="fetal-cluster" & Tcells$age=="fetal") / sum(Tcells$age=="fetal")
+sum(meta("ident",Tcells)=="fetal-cluster" & Tcells$Age=="fetal") / sum(Tcells$Age=="fetal")
 
 # Percentage of UCB cells in UCB-cluster
-sum(meta("ident",Tcells)=="UCB-cluster" & Tcells$age=="cord") / sum(Tcells$age=="cord")
+sum(meta("ident",Tcells)=="UCB-cluster" & Tcells$Age=="cord") / sum(Tcells$Age=="cord")
 
 # Percentage of adult cells in adult-cluster
-sum(meta("ident",Tcells)=="adult-cluster" & Tcells$age=="adult") / sum(Tcells$age=="adult")
+sum(meta("ident",Tcells)=="adult-cluster" & Tcells$Age=="adult") / sum(Tcells$Age=="adult")
 
 # Total percentage matching their age
 (sum(meta("ident",Tcells)=="fetal-cluster" & Tcells$age=="fetal") +
